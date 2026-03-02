@@ -1,1 +1,25 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viku's Dashboard</title>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); padding: 20px; border-radius: 20px; text-align: center; width: 80%; max-width: 400px; border: 1px solid rgba(255,255,255,0.2); }
+        .btn { display: block; padding: 15px; margin: 10px 0; border-radius: 10px; text-decoration: none; color: white; font-weight: bold; transition: 0.3s; }
+        .yt { background: #ef4444; } .learn { background: #3b82f6; } .notes { background: #f59e0b; }
+        .btn:hover { transform: scale(1.05); filter: brightness(1.2); }
+        img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #3b82f6; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="https://via.placeholder.com/80" alt="Profile">
+        <h2>Welcome, Viku</h2>
+        <a href="https://youtube.com" target="_blank" class="btn yt">Open YouTube</a>
+        <a href="https://www.w3schools.com" target="_blank" class="btn learn">Learning (W3Schools)</a>
+        <a href="https://keep.google.com" target="_blank" class="btn notes">My Notes</a>
+    </div>
+</body>
+</html>
