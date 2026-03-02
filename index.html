@@ -3,173 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Digital Space - Secure</title>
+    <title>My Secure Digital Space</title>
     <style>
-        /* --- Global Styles --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f8fafc; line-height: 1.6; overflow-x: hidden; }
-
-        /* --- Auth Section (Full Screen Overlay) --- */
-        #auth-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #0f172a; z-index: 2000; display: flex; align-items: center; justify-content: center;
-        }
-        .auth-box {
-            background: #1e293b; padding: 2.5rem; border-radius: 20px; width: 90%; max-width: 400px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; border: 1px solid #334155;
-        }
-        .auth-box h2 { margin-bottom: 1.5rem; color: #38bdf8; }
-        .auth-input {
-            width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px;
-            border: 1px solid #334155; background: #0f172a; color: white;
-        }
-        .auth-btn {
-            width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold;
-            cursor: pointer; transition: 0.3s; margin-top: 5px;
-        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        #auth-overlay { position: fixed; inset: 0; background: #0f172a; z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .auth-box { background: #1e293b; padding: 2rem; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .auth-input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; }
+        .auth-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; transition: 0.3s; }
         .login-btn { background: #38bdf8; color: #0f172a; }
         .google-btn { background: white; color: #334155; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .toggle-auth { margin-top: 15px; font-size: 0.85rem; color: #94a3b8; cursor: pointer; text-decoration: underline; }
-
-        /* --- Dashboard (Hidden by default) --- */
         #dashboard { display: none; }
-
-        /* --- Your Original Design (Modified) --- */
-        header { background-color: #1e293b; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .logo { font-size: 1.5rem; font-weight: bold; color: #38bdf8; }
-        .hero { text-align: center; padding: 4rem 1rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto; padding: 2rem; }
-        
-        .card { 
-            background-color: #1e293b; border-radius: 16px; padding: 2rem; text-align: center;
-            transition: 0.3s; cursor: pointer; text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.05);
-        }
-        .card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.4); filter: brightness(1.1); }
+        header { background-color: #1e293b; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        .card { background-color: #1e293b; border-radius: 16px; padding: 2rem; text-align: center; text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
+        .card:hover { transform: translateY(-8px); filter: brightness(1.1); }
         .card.youtube { background: linear-gradient(145deg, #cc181e, #920b10); }
         .card.replit { background: linear-gradient(145deg, #F26207, #c44e05); }
-        .card.notes { background: linear-gradient(145deg, #10B981, #059669); }
-        .card.learning { background: linear-gradient(145deg, #F59E0B, #d97706); }
-
-        /* --- Cookie Banner --- */
-        #cookie-banner {
-            position: fixed; bottom: -100px; left: 0; width: 100%; background: #1e293b;
-            padding: 15px; text-align: center; border-top: 2px solid #38bdf8; z-index: 3000; transition: 0.5s;
-        }
-        .cookie-btn { background: #38bdf8; color: #0f172a; padding: 5px 15px; border-radius: 5px; border: none; cursor: pointer; margin-left: 10px; font-weight: bold; }
+        #cookie-banner { position: fixed; bottom: -100px; left: 0; width: 100%; background: #1e293b; padding: 15px; text-align: center; border-top: 2px solid #38bdf8; transition: 0.5s; z-index: 3000; }
     </style>
 </head>
 <body>
 
     <div id="auth-overlay">
-        <div class="auth-box" id="login-form">
-            <h2>Login</h2>
-            <input type="email" id="login-email" class="auth-input" placeholder="Email Address">
-            <input type="password" id="login-pass" class="auth-input" placeholder="Password">
-            <button class="auth-btn login-btn" onclick="processLogin()">Enter Dashboard</button>
-            <div class="toggle-auth" onclick="toggleForm('signup')">Don't have an account? Signup</div>
-            <button class="auth-btn google-btn" onclick="googleSimulate()">
-                <img src="https://www.google.com/favicon.ico" width="18"> Sign in with Google
+        <div class="auth-box" id="login-container">
+            <h2 style="color:#38bdf8; margin-bottom:1rem;">Secure Login</h2>
+            <input type="email" id="email" class="auth-input" placeholder="Email Address">
+            <input type="password" id="pass" class="auth-input" placeholder="Password">
+            <button class="auth-btn login-btn" onclick="handleEmailAuth()">Login / Signup</button>
+            <button class="auth-btn google-btn" onclick="handleGoogleLogin()">
+                <img src="https://www.google.com/favicon.ico" width="18"> Continue with Google
             </button>
-        </div>
-
-        <div class="auth-box" id="signup-form" style="display: none;">
-            <h2>Signup</h2>
-            <input type="email" id="signup-email" class="auth-input" placeholder="Choose Email">
-            <input type="password" id="signup-pass" class="auth-input" placeholder="Choose Password">
-            <button class="auth-btn login-btn" onclick="processSignup()">Create Account</button>
-            <div class="toggle-auth" onclick="toggleForm('login')">Already have an account? Login</div>
         </div>
     </div>
 
     <div id="dashboard">
         <header>
-            <div class="logo">My Digital Space</div>
-            <button onclick="logout()" style="background: none; border: 1px solid #ef4444; color: #ef4444; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Logout</button>
+            <div style="font-size:1.5rem; font-weight:bold; color:#38bdf8;">My Digital Space</div>
+            <button onclick="handleLogout()" style="background:none; border:1px solid #ef4444; color:#ef4444; padding:5px 10px; border-radius:5px; cursor:pointer;">Logout</button>
         </header>
-
-        <section class="hero">
-            <h1>Welcome, User</h1>
-            <p>Your personal productivity hub.</p>
-        </section>
-
         <main class="grid">
-            <a href="https://youtube.com" target="_blank" class="card youtube"><div>▶️</div><h3>YouTube</h3></a>
-            <a href="https://replit.com" target="_blank" class="card replit"><div>⚡</div><h3>Replit</h3></a>
-            <a href="https://keep.google.com" target="_blank" class="card notes"><div>📝</div><h3>Google Keep</h3></a>
-            <a href="https://www.w3schools.com" target="_blank" class="card learning"><div>📚</div><h3>W3Schools</h3></a>
+            <a href="https://youtube.com" target="_blank" class="card youtube"><h3>▶️ YouTube</h3></a>
+            <a href="https://replit.com" target="_blank" class="card replit"><h3>⚡ Replit</h3></a>
+            <a href="https://keep.google.com" target="_blank" class="card" style="background:linear-gradient(145deg, #10B981, #059669)"><h3>📝 Notes</h3></a>
         </main>
     </div>
 
     <div id="cookie-banner">
-        This website uses cookies to improve your experience. 
-        <button class="cookie-btn" onclick="acceptCookies()">Allow Cookies</button>
+        We use cookies for security. <button onclick="acceptCookies()" style="background:#38bdf8; border:none; padding:5px 10px; border-radius:4px; margin-left:10px; cursor:pointer;">Allow</button>
     </div>
 
-    <script>
-        // --- Auth Logic ---
-        function toggleForm(form) {
-            document.getElementById('login-form').style.display = form === 'login' ? 'block' : 'none';
-            document.getElementById('signup-form').style.display = form === 'signup' ? 'block' : 'none';
-        }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        function processSignup() {
-            const email = document.getElementById('signup-email').value;
-            const pass = document.getElementById('signup-pass').value;
-            if(email && pass) {
-                localStorage.setItem('user_email', email);
-                localStorage.setItem('user_pass', pass);
-                alert('Account Created Successfully! Please Login.');
-                toggleForm('login');
-            } else { alert('Please fill all fields'); }
-        }
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4dDH00h0sXai8xdF38AXrz6xI82pZN_A",
+            authDomain: "my-dashboard-b690b.firebaseapp.com",
+            projectId: "my-dashboard-b690b",
+            storageBucket: "my-dashboard-b690b.firebasestorage.app",
+            messagingSenderId: "357200937143",
+            appId: "1:357200937143:web:d9f22a05ee4339cf2a0d32",
+            measurementId: "G-VLPYHZZR6Y"
+        };
 
-        function processLogin() {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            const savedEmail = localStorage.getItem('user_email');
-            const savedPass = localStorage.getItem('user_pass');
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+        const provider = new GoogleAuthProvider();
 
-            if(email === savedEmail && pass === savedPass) {
-                localStorage.setItem('isLoggedIn', 'true');
-                showDashboard();
+        window.handleGoogleLogin = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
+
+        window.handleEmailAuth = () => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+            signInWithEmailAndPassword(auth, email, pass).catch(() => {
+                createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
+            });
+        };
+
+        window.handleLogout = () => signOut(auth);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                if(!localStorage.getItem('cookieOk')) document.getElementById('cookie-banner').style.bottom = '0';
             } else {
-                alert('Wrong Email or Password!');
-                window.location.reload(); // Redirects back to login
+                document.getElementById('auth-overlay').style.display = 'flex';
+                document.getElementById('dashboard').style.display = 'none';
             }
-        }
+        });
 
-        function googleSimulate() {
-            localStorage.setItem('isLoggedIn', 'true');
-            showDashboard();
-        }
-
-        function showDashboard() {
-            document.getElementById('auth-overlay').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            checkCookies();
-        }
-
-        function logout() {
-            localStorage.removeItem('isLoggedIn');
-            window.location.reload();
-        }
-
-        // --- Cookie Logic ---
-        function checkCookies() {
-            if(!localStorage.getItem('cookiesAccepted')) {
-                document.getElementById('cookie-banner').style.bottom = '0';
-            }
-        }
-        function acceptCookies() {
-            localStorage.setItem('cookiesAccepted', 'true');
+        window.acceptCookies = () => {
+            localStorage.setItem('cookieOk', 'true');
             document.getElementById('cookie-banner').style.bottom = '-100px';
-        }
-
-        // --- Initial Load ---
-        window.onload = () => {
-            if(localStorage.getItem('isLoggedIn') === 'true') {
-                showDashboard();
-            }
         };
     </script>
 </body>
