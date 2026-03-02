@@ -7,99 +7,170 @@
     <style>
         /* --- Global Styles --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f8fafc; overflow: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f8fafc; line-height: 1.6; overflow-x: hidden; }
 
-        /* --- Login Overlay --- */
-        #login-screen {
+        /* --- Auth Section (Full Screen Overlay) --- */
+        #auth-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #0f172a; display: flex; align-items: center; justify-content: center;
-            z-index: 9999; transition: 0.5s;
+            background: #0f172a; z-index: 2000; display: flex; align-items: center; justify-content: center;
         }
-        .login-box {
-            background: #1e293b; padding: 2.5rem; border-radius: 20px;
-            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 90%; max-width: 400px;
+        .auth-box {
+            background: #1e293b; padding: 2.5rem; border-radius: 20px; width: 90%; max-width: 400px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; border: 1px solid #334155;
         }
-        .login-box h2 { margin-bottom: 1.5rem; color: #38bdf8; }
-        .login-input {
-            width: 100%; padding: 12px; margin-bottom: 1rem;
-            border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;
+        .auth-box h2 { margin-bottom: 1.5rem; color: #38bdf8; }
+        .auth-input {
+            width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px;
+            border: 1px solid #334155; background: #0f172a; color: white;
         }
-        .btn-login {
-            width: 100%; padding: 12px; border-radius: 8px; border: none;
-            background: #38bdf8; color: #0f172a; font-weight: bold; cursor: pointer; transition: 0.3s;
+        .auth-btn {
+            width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold;
+            cursor: pointer; transition: 0.3s; margin-top: 5px;
         }
-        .btn-google {
-            width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: 1px solid #94a3b8;
-            background: white; color: #334155; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
-        }
+        .login-btn { background: #38bdf8; color: #0f172a; }
+        .google-btn { background: white; color: #334155; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .toggle-auth { margin-top: 15px; font-size: 0.85rem; color: #94a3b8; cursor: pointer; text-decoration: underline; }
 
         /* --- Dashboard (Hidden by default) --- */
-        #main-content { display: none; overflow-y: auto; height: 100vh; }
+        #dashboard { display: none; }
 
-        /* --- Your Original CSS Styles --- */
-        header { background-color: #1e293b; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        /* --- Your Original Design (Modified) --- */
+        header { background-color: #1e293b; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .logo { font-size: 1.5rem; font-weight: bold; color: #38bdf8; }
-        .hero { text-align: center; padding: 3rem 1rem; }
-        .profile-placeholder { width: 120px; height: 120px; background: linear-gradient(135deg, #334155, #475569); border-radius: 50%; margin: 0 auto 1.5rem; border: 4px solid #38bdf8; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 2rem; max-width: 1200px; margin: 0 auto; }
-        .card { background-color: #1e293b; border-radius: 16px; padding: 2rem; text-align: center; transition: 0.3s; cursor: pointer; text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.05); }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); filter: brightness(1.2); }
+        .hero { text-align: center; padding: 4rem 1rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        
+        .card { 
+            background-color: #1e293b; border-radius: 16px; padding: 2rem; text-align: center;
+            transition: 0.3s; cursor: pointer; text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.4); filter: brightness(1.1); }
         .card.youtube { background: linear-gradient(145deg, #cc181e, #920b10); }
+        .card.replit { background: linear-gradient(145deg, #F26207, #c44e05); }
         .card.notes { background: linear-gradient(145deg, #10B981, #059669); }
         .card.learning { background: linear-gradient(145deg, #F59E0B, #d97706); }
+
+        /* --- Cookie Banner --- */
+        #cookie-banner {
+            position: fixed; bottom: -100px; left: 0; width: 100%; background: #1e293b;
+            padding: 15px; text-align: center; border-top: 2px solid #38bdf8; z-index: 3000; transition: 0.5s;
+        }
+        .cookie-btn { background: #38bdf8; color: #0f172a; padding: 5px 15px; border-radius: 5px; border: none; cursor: pointer; margin-left: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <div class="login-box">
-            <h2>Welcome Back</h2>
-            <input type="email" class="login-input" placeholder="Email Address">
-            <input type="password" class="login-input" placeholder="Password">
-            <button class="btn-login" onclick="login()">Login</button>
-            <button class="btn-google" onclick="login()">
+    <div id="auth-overlay">
+        <div class="auth-box" id="login-form">
+            <h2>Login</h2>
+            <input type="email" id="login-email" class="auth-input" placeholder="Email Address">
+            <input type="password" id="login-pass" class="auth-input" placeholder="Password">
+            <button class="auth-btn login-btn" onclick="processLogin()">Enter Dashboard</button>
+            <div class="toggle-auth" onclick="toggleForm('signup')">Don't have an account? Signup</div>
+            <button class="auth-btn google-btn" onclick="googleSimulate()">
                 <img src="https://www.google.com/favicon.ico" width="18"> Sign in with Google
             </button>
         </div>
-    </div>
 
-    <div id="main-content">
-        <header>
-            <div class="logo">My Digital Space</div>
-        </header>
-
-        <section class="hero">
-            <div class="profile-placeholder"></div>
-            <h1>Secure Dashboard</h1>
-            <p>Your personal hub is now unlocked.</p>
-        </section>
-
-        <div class="grid">
-            <a href="https://youtube.com" target="_blank" class="card youtube">
-                <div style="font-size: 2rem;">▶️</div>
-                <h3>YouTube</h3>
-            </a>
-            <a href="https://keep.google.com" target="_blank" class="card notes">
-                <div style="font-size: 2rem;">📝</div>
-                <h3>Google Keep</h3>
-            </a>
-            <a href="https://www.w3schools.com" target="_blank" class="card learning">
-                <div style="font-size: 2rem;">📚</div>
-                <h3>W3Schools</h3>
-            </a>
+        <div class="auth-box" id="signup-form" style="display: none;">
+            <h2>Signup</h2>
+            <input type="email" id="signup-email" class="auth-input" placeholder="Choose Email">
+            <input type="password" id="signup-pass" class="auth-input" placeholder="Choose Password">
+            <button class="auth-btn login-btn" onclick="processSignup()">Create Account</button>
+            <div class="toggle-auth" onclick="toggleForm('login')">Already have an account? Login</div>
         </div>
     </div>
 
+    <div id="dashboard">
+        <header>
+            <div class="logo">My Digital Space</div>
+            <button onclick="logout()" style="background: none; border: 1px solid #ef4444; color: #ef4444; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Logout</button>
+        </header>
+
+        <section class="hero">
+            <h1>Welcome, User</h1>
+            <p>Your personal productivity hub.</p>
+        </section>
+
+        <main class="grid">
+            <a href="https://youtube.com" target="_blank" class="card youtube"><div>▶️</div><h3>YouTube</h3></a>
+            <a href="https://replit.com" target="_blank" class="card replit"><div>⚡</div><h3>Replit</h3></a>
+            <a href="https://keep.google.com" target="_blank" class="card notes"><div>📝</div><h3>Google Keep</h3></a>
+            <a href="https://www.w3schools.com" target="_blank" class="card learning"><div>📚</div><h3>W3Schools</h3></a>
+        </main>
+    </div>
+
+    <div id="cookie-banner">
+        This website uses cookies to improve your experience. 
+        <button class="cookie-btn" onclick="acceptCookies()">Allow Cookies</button>
+    </div>
+
     <script>
-        function login() {
-            // Login screen ko chhupa do aur main content dikha do
-            document.getElementById('login-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-                document.body.style.overflow = 'auto';
-            }, 500);
+        // --- Auth Logic ---
+        function toggleForm(form) {
+            document.getElementById('login-form').style.display = form === 'login' ? 'block' : 'none';
+            document.getElementById('signup-form').style.display = form === 'signup' ? 'block' : 'none';
         }
+
+        function processSignup() {
+            const email = document.getElementById('signup-email').value;
+            const pass = document.getElementById('signup-pass').value;
+            if(email && pass) {
+                localStorage.setItem('user_email', email);
+                localStorage.setItem('user_pass', pass);
+                alert('Account Created Successfully! Please Login.');
+                toggleForm('login');
+            } else { alert('Please fill all fields'); }
+        }
+
+        function processLogin() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const savedEmail = localStorage.getItem('user_email');
+            const savedPass = localStorage.getItem('user_pass');
+
+            if(email === savedEmail && pass === savedPass) {
+                localStorage.setItem('isLoggedIn', 'true');
+                showDashboard();
+            } else {
+                alert('Wrong Email or Password!');
+                window.location.reload(); // Redirects back to login
+            }
+        }
+
+        function googleSimulate() {
+            localStorage.setItem('isLoggedIn', 'true');
+            showDashboard();
+        }
+
+        function showDashboard() {
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            checkCookies();
+        }
+
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            window.location.reload();
+        }
+
+        // --- Cookie Logic ---
+        function checkCookies() {
+            if(!localStorage.getItem('cookiesAccepted')) {
+                document.getElementById('cookie-banner').style.bottom = '0';
+            }
+        }
+        function acceptCookies() {
+            localStorage.setItem('cookiesAccepted', 'true');
+            document.getElementById('cookie-banner').style.bottom = '-100px';
+        }
+
+        // --- Initial Load ---
+        window.onload = () => {
+            if(localStorage.getItem('isLoggedIn') === 'true') {
+                showDashboard();
+            }
+        };
     </script>
 </body>
 </html>
