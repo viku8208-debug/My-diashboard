@@ -3,60 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Secure Digital Space</title>
+    <title>Viku's Premium Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
-        #auth-overlay { position: fixed; inset: 0; background: #0f172a; z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .auth-box { background: #1e293b; padding: 2rem; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .auth-input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; }
-        .auth-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; transition: 0.3s; }
-        .login-btn { background: #38bdf8; color: #0f172a; }
-        .google-btn { background: white; color: #334155; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        #dashboard { display: none; }
-        header { background-color: #1e293b; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; padding: 2rem; max-width: 1200px; margin: 0 auto; }
-        .card { background-color: #1e293b; border-radius: 16px; padding: 2rem; text-align: center; text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
-        .card:hover { transform: translateY(-8px); filter: brightness(1.1); }
-        .card.youtube { background: linear-gradient(145deg, #cc181e, #920b10); }
-        .card.replit { background: linear-gradient(145deg, #F26207, #c44e05); }
-        #cookie-banner { position: fixed; bottom: -100px; left: 0; width: 100%; background: #1e293b; padding: 15px; text-align: center; border-top: 2px solid #38bdf8; transition: 0.5s; z-index: 3000; }
+        :root {
+            --primary: #8b5cf6;
+            --secondary: #ec4899;
+            --dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        
+        body { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- Login Overlay --- */
+        #auth-overlay {
+            position: fixed; inset: 0;
+            background: linear-gradient(45deg, #4c1d95, #831843);
+            z-index: 5000;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.8s ease-in-out;
+        }
+
+        .login-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            padding: 3rem; border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center; width: 90%; max-width: 450px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        /* Walking Girl Animation */
+        .walking-character {
+            position: absolute; bottom: 10%; left: -100px;
+            font-size: 50px;
+            animation: walk 15s linear infinite;
+        }
+        @keyframes walk {
+            0% { left: -50px; transform: scaleX(1); }
+            45% { transform: scaleX(1); }
+            50% { left: 110%; transform: scaleX(-1); }
+            95% { transform: scaleX(-1); }
+            100% { left: -50px; transform: scaleX(1); }
+        }
+
+        input {
+            width: 100%; padding: 15px; margin: 10px 0;
+            border-radius: 12px; border: none;
+            background: rgba(0,0,0,0.3); color: white;
+            outline: none; border: 1px solid transparent;
+        }
+        input:focus { border-color: var(--secondary); }
+
+        .btn {
+            width: 100%; padding: 15px; border-radius: 12px;
+            border: none; font-weight: bold; cursor: pointer;
+            margin-top: 10px; transition: 0.3s;
+        }
+        .btn-google { background: white; color: #333; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-main { background: var(--secondary); color: white; }
+        .btn:hover { transform: scale(1.02); opacity: 0.9; }
+
+        /* --- Dashboard --- */
+        #dashboard { display: none; padding: 2rem; }
+        
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 2rem; border-bottom: 1px solid var(--glass);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px; margin-top: 2rem;
+        }
+
+        .card {
+            background: var(--glass);
+            border-radius: 20px; padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: 0.4s; text-decoration: none; color: white;
+        }
+        .card:hover { background: rgba(255,255,255,0.2); transform: translateY(-10px); }
+
+        /* Notes Area */
+        #notes-area {
+            width: 100%; height: 150px;
+            background: rgba(0,0,0,0.2); border: none;
+            border-radius: 10px; color: #fbbf24;
+            padding: 10px; font-family: monospace;
+            resize: none; margin-top: 10px;
+        }
+
+        .footer {
+            text-align: center; padding: 3rem;
+            font-size: 1.2rem; color: #94a3b8;
+        }
+
+        /* Color Gradients for Cards */
+        .yt-card { background: linear-gradient(45deg, #ef4444, #991b1b); }
+        .code-card { background: linear-gradient(45deg, #06b6d4, #0e7490); }
+        .note-card { background: linear-gradient(45deg, #f59e0b, #b45309); }
+
     </style>
 </head>
 <body>
 
     <div id="auth-overlay">
-        <div class="auth-box" id="login-container">
-            <h2 style="color:#38bdf8; margin-bottom:1rem;">Secure Login</h2>
-            <input type="email" id="email" class="auth-input" placeholder="Email Address">
-            <input type="password" id="pass" class="auth-input" placeholder="Password">
-            <button class="auth-btn login-btn" onclick="handleEmailAuth()">Login / Signup</button>
-            <button class="auth-btn google-btn" onclick="handleGoogleLogin()">
-                <img src="https://www.google.com/favicon.ico" width="18"> Continue with Google
+        <div class="walking-character">👧</div>
+        <div class="login-card">
+            <h1 style="margin-bottom: 10px;">Welcome Back</h1>
+            <p style="margin-bottom: 20px; opacity: 0.7;">Viku's Private Workspace</p>
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="password" id="login-pass" placeholder="Password">
+            <button class="btn btn-main" id="email-btn">Enter Workspace</button>
+            <div style="margin: 15px 0;">OR</div>
+            <button class="btn btn-google" id="google-btn">
+                <img src="https://www.google.com/favicon.ico" width="18"> Sign in with Google
             </button>
         </div>
     </div>
 
     <div id="dashboard">
-        <header>
-            <div style="font-size:1.5rem; font-weight:bold; color:#38bdf8;">My Digital Space</div>
-            <button onclick="handleLogout()" style="background:none; border:1px solid #ef4444; color:#ef4444; padding:5px 10px; border-radius:5px; cursor:pointer;">Logout</button>
-        </header>
-        <main class="grid">
-            <a href="https://youtube.com" target="_blank" class="card youtube"><h3>▶️ YouTube</h3></a>
-            <a href="https://replit.com" target="_blank" class="card replit"><h3>⚡ Replit</h3></a>
-            <a href="https://keep.google.com" target="_blank" class="card" style="background:linear-gradient(145deg, #10B981, #059669)"><h3>📝 Notes</h3></a>
-        </main>
-    </div>
+        <div class="header">
+            <h2>✨ Viku's Dashboard</h2>
+            <button onclick="logout()" style="background:none; border:1px solid #ef4444; color:#ef4444; padding:8px 16px; border-radius:8px; cursor:pointer;">Logout</button>
+        </div>
 
-    <div id="cookie-banner">
-        We use cookies for security. <button onclick="acceptCookies()" style="background:#38bdf8; border:none; padding:5px 10px; border-radius:4px; margin-left:10px; cursor:pointer;">Allow</button>
+        <div class="grid">
+            <a href="https://www.youtube.com" target="_blank" class="card yt-card">
+                <h3>📺 Watch YouTube</h3>
+                <p>Explore videos and tutorials</p>
+            </a>
+
+            <div class="card code-card">
+                <h3>💻 Learn Coding</h3>
+                <p>Choose a language to start:</p>
+                <div style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button class="btn" onclick="window.open('https://www.w3schools.com/python/')" style="width:auto; padding:5px 10px; font-size:12px;">Python</button>
+                    <button class="btn" onclick="window.open('https://www.javascript.com/')" style="width:auto; padding:5px 10px; font-size:12px;">JavaScript</button>
+                    <button class="btn" onclick="window.open('https://www.cppreference.com/')" style="width:auto; padding:5px 10px; font-size:12px;">C++</button>
+                </div>
+            </div>
+
+            <div class="card note-card">
+                <h3>📝 Personal Notes</h3>
+                <textarea id="notes-area" placeholder="Type your ideas here... It saves automatically!"></textarea>
+            </div>
+        </div>
+
+        <div class="footer">
+            Made with ❤️ by Viku
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+        // 🔥 YOUR FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyC4dDH00h0sXai8xdF38AXrz6xI82pZN_A",
             authDomain: "my-dashboard-b690b.firebaseapp.com",
@@ -71,33 +184,53 @@
         const auth = getAuth();
         const provider = new GoogleAuthProvider();
 
-        window.handleGoogleLogin = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
+        // Celebration Animation
+        function celebrate() {
+            var duration = 5 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
 
-        window.handleEmailAuth = () => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('pass').value;
+        // Auth Logic
+        document.getElementById('google-btn').onclick = () => signInWithPopup(auth, provider);
+        
+        document.getElementById('email-btn').onclick = () => {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
             signInWithEmailAndPassword(auth, email, pass).catch(() => {
                 createUserWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
             });
         };
 
-        window.handleLogout = () => signOut(auth);
+        window.logout = () => signOut(auth);
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                document.getElementById('auth-overlay').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                if(!localStorage.getItem('cookieOk')) document.getElementById('cookie-banner').style.bottom = '0';
+                document.getElementById('auth-overlay').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('auth-overlay').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    celebrate(); // 🎉 Udao decorative items!
+                }, 800);
             } else {
                 document.getElementById('auth-overlay').style.display = 'flex';
                 document.getElementById('dashboard').style.display = 'none';
             }
         });
 
-        window.acceptCookies = () => {
-            localStorage.setItem('cookieOk', 'true');
-            document.getElementById('cookie-banner').style.bottom = '-100px';
-        };
+        // Notes Logic
+        const notesArea = document.getElementById('notes-area');
+        notesArea.value = localStorage.getItem('viku_notes') || "";
+        notesArea.oninput = () => localStorage.setItem('viku_notes', notesArea.value);
+
     </script>
 </body>
 </html>
