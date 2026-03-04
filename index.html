@@ -1,57 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>StudentSathi</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StudentSathi Login</title>
+<link rel="stylesheet" href="style.css">
 
-<style>
-
-body{
-font-family:Arial;
-background:linear-gradient(135deg,#6a5af9,#8e54e9);
-color:white;
-text-align:center;
-padding:40px;
-}
-
-.card{
-background:white;
-color:black;
-padding:20px;
-margin:20px;
-border-radius:12px;
-}
-
-a{
-text-decoration:none;
-color:white;
-background:#6a5af9;
-padding:10px 20px;
-border-radius:8px;
-}
-
-</style>
+<script type="module" src="app.js"></script>
 </head>
 
-<body>
+<body class="gradient">
+
+<div class="login-card">
 
 <h1>StudentSathi</h1>
 
-<p>Your complete support platform for Indian students</p>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
 
-<div class="card">
-<h3>Scholarships</h3>
-<p>Find scholarships easily</p>
+<button onclick="login()">Login</button>
+<button onclick="signup()">Signup</button>
+
+<button class="google" onclick="googleLogin()">Login with Google</button>
+
+<p id="error"></p>
+
 </div>
-
-<div class="card">
-<h3>Exam Calendar</h3>
-<p>Stay updated with exams</p>
-</div>
-
-<br>
-
-<a href="login.html">Login</a>
 
 </body>
 </html>
