@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Marketplace - StudentSathi</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="main-content">
+        <header>
+            <h1>Textbook Marketplace</h1>
+            <button onclick="document.getElementById('market-modal').style.display='flex'" style="width: auto; padding: 10px 20px;">Sell a Book</button>
+        </header>
+
+        <div id="market-grid" class="grid">
+            <!-- Books will be loaded here -->
+        </div>
+    </div>
+
+    <div id="market-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1001; justify-content:center; align-items:center;">
+        <div class="login-card" style="text-align: left;">
+            <h2>List Your Book</h2>
+            <input type="file" id="book-img" accept="image/*">
+            <input type="text" id="book-title" placeholder="Book Title">
+            <input type="number" id="book-price" placeholder="Price ($)">
+            <input type="text" id="book-desc" placeholder="Condition / Description">
+            <button id="list-book-btn">List Now</button>
+            <button onclick="document.getElementById('market-modal').style.display='none'" style="background: #ccc; color: #333;">Cancel</button>
+            <div id="market-status"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { injectNavigation, escapeHTML } from './components.js';
+        import { auth, db, storage } from './app.js';
+        import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+        injectNavigation();
+
+        const listBtn = document.getElementById('list-book-btn');
+        const marketGrid = document.getElementById('market-grid');
+
+        listBtn.onclick = async () => {
+            const file = document.getElementById('book-img').files[0];
+            const title = document.getElementById('book-title').value;
+            const price = document.getElementById('book-price').value;
+            const desc = document.getElementById('book-desc').value;
+            const status = document.getElementById('market-status');
+
+            if(!file || !title || !price) return alert("Fill all fields");
+
+            status.innerText = "Listing...";
+            listBtn.disabled = true;
+
+            try {
+                const storageRef = ref(storage, `books/${Date.now()}_${file.name}`);
+                const snapshot = await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(snapshot.ref);
+
+                await addDoc(collection(db, "marketplace"), {
+                    imgUrl: url,
+                    title: title,
+                    price: price,
+                    description: desc,
+                    userId: auth.currentUser.uid,
+                    userName: auth.currentUser.displayName,
+                    createdAt: serverTimestamp()
+                });
+
+                status.innerText = "Listed!";
+                setTimeout(() => {
+                    document.getElementById('market-modal').style.display = 'none';
+                    status.innerText = "";
+                    listBtn.disabled = false;
+                }, 1000);
+            } catch (e) {
+                status.innerText = "Error: " + e.message;
+                listBtn.disabled = false;
+            }
+        };
+
+        const q = query(collection(db, "marketplace"), orderBy("createdAt", "desc"));
+        onSnapshot(q, (snapshot) => {
+            marketGrid.innerHTML = '';
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const bookHtml = `
+                    <div class="card" style="text-align: left; padding: 0; overflow: hidden;">
+                        <img src="${escapeHTML(data.imgUrl)}" style="width: 100%; height: 200px; object-fit: cover;">
+                        <div style="padding: 15px;">
+                            <h3 style="margin:0;">${escapeHTML(data.title)}</h3>
+                            <p style="color: var(--primary-color); font-weight: bold; margin: 5px 0;">$${escapeHTML(data.price)}</p>
+                            <p style="font-size: 0.9rem; color: #666;">${escapeHTML(data.description)}</p>
+                            <button onclick="location.href='messages.html?chatWith=${escapeHTML(data.userId)}'" style="margin-top:10px;">Message Seller</button>
+                        </div>
+                    </div>
+                `;
+                marketGrid.insertAdjacentHTML('beforeend', bookHtml);
+            });
+        });
+    </script>
+</body>
+</html>

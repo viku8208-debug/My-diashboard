@@ -1,38 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>StudentSathi Dashboard</title>
-<link rel="stylesheet" href="style.css">
-
-<script type="module" src="app.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Dashboard - StudentSathi</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<header>
+    <div class="main-content">
+        <header>
+            <h1>Welcome to StudentSathi</h1>
+        </header>
 
-<h2>StudentSathi</h2>
+        <div style="margin-bottom: 30px; background: var(--primary-color); color: white; padding: 30px; border-radius: var(--border-radius);">
+            <h2>Hello, <span id="user-greeting">Student</span>! 👋</h2>
+            <p>Ready to excel in your studies today?</p>
+        </div>
 
-<button onclick="logout()">Logout</button>
+        <div class="grid">
+            <div class="card" onclick="location.href='reels.html'">
+                <div class="icon" style="font-size: 3rem;">📱</div>
+                <h3>Study Reels</h3>
+                <p>Watch short educational videos from fellow students.</p>
+            </div>
+            <div class="card" onclick="location.href='notes.html'">
+                <div class="icon" style="font-size: 3rem;">📚</div>
+                <h3>Study Resources</h3>
+                <p>Access high-quality notes and share your own.</p>
+            </div>
+            <div class="card" onclick="location.href='marketplace.html'">
+                <div class="icon" style="font-size: 3rem;">🛒</div>
+                <h3>Marketplace</h3>
+                <p>Buy or sell textbooks and study materials easily.</p>
+            </div>
+            <div class="card" onclick="location.href='messages.html'">
+                <div class="icon" style="font-size: 3rem;">💬</div>
+                <h3>Messages</h3>
+                <p>Chat with study buddies and sellers in real-time.</p>
+            </div>
+            <div class="card" onclick="location.href='profile.html'">
+                <div class="icon" style="font-size: 3rem;">👤</div>
+                <h3>Your Profile</h3>
+                <p>Manage your academic info and see your activity.</p>
+            </div>
+        </div>
+    </div>
 
-</header>
+    <script type="module">
+        import { injectNavigation } from './components.js';
+        import { auth } from './app.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-<div class="grid">
+        injectNavigation();
 
-<div class="card">🎓 Scholarship Finder</div>
-
-<div class="card">📅 Exam Calendar</div>
-
-<div class="card">📚 Study Resources</div>
-
-<div class="card">🤖 AI Assistant</div>
-
-<div class="card">💬 Mental Health</div>
-
-<div class="card">🚀 Career Guidance</div>
-
-</div>
-
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('user-greeting').innerText = user.displayName || 'Student Sathi';
+            }
+        });
+    </script>
 </body>
-  </html>
+</html>

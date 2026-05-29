@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Study Notes - StudentSathi</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="main-content">
+        <header>
+            <h1>Study Notes</h1>
+            <button onclick="document.getElementById('note-modal').style.display='flex'" style="width: auto; padding: 10px 20px;">Upload Notes</button>
+        </header>
+
+        <div id="notes-grid" class="grid">
+            <!-- Notes will be loaded here -->
+        </div>
+    </div>
+
+    <div id="note-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1001; justify-content:center; align-items:center;">
+        <div class="login-card" style="text-align: left;">
+            <h2>Upload Study Material</h2>
+            <input type="file" id="note-file" accept=".pdf,image/*">
+            <input type="text" id="note-title" placeholder="Subject / Topic Title">
+            <select id="note-category">
+                <option value="Science">Science</option>
+                <option value="Math">Math</option>
+                <option value="History">History</option>
+                <option value="Language">Language</option>
+                <option value="Other">Other</option>
+            </select>
+            <button id="save-note-btn">Upload</button>
+            <button onclick="document.getElementById('note-modal').style.display='none'" style="background: #ccc; color: #333;">Cancel</button>
+            <div id="note-status"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { injectNavigation, escapeHTML } from './components.js';
+        import { auth, db, storage } from './app.js';
+        import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+        injectNavigation();
+
+        const saveNoteBtn = document.getElementById('save-note-btn');
+        const notesGrid = document.getElementById('notes-grid');
+
+        saveNoteBtn.onclick = async () => {
+            const file = document.getElementById('note-file').files[0];
+            const title = document.getElementById('note-title').value;
+            const category = document.getElementById('note-category').value;
+            const status = document.getElementById('note-status');
+
+            if(!file || !title) return alert("All fields required");
+
+            status.innerText = "Uploading...";
+            saveNoteBtn.disabled = true;
+
+            try {
+                const storageRef = ref(storage, `notes/${Date.now()}_${file.name}`);
+                const snapshot = await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(snapshot.ref);
+
+                await addDoc(collection(db, "notes"), {
+                    fileUrl: url,
+                    title: title,
+                    category: category,
+                    userId: auth.currentUser.uid,
+                    userName: auth.currentUser.displayName,
+                    createdAt: serverTimestamp()
+                });
+
+                status.innerText = "Uploaded!";
+                setTimeout(() => {
+                    document.getElementById('note-modal').style.display = 'none';
+                    status.innerText = "";
+                    saveNoteBtn.disabled = false;
+                }, 1000);
+            } catch (e) {
+                status.innerText = "Error: " + e.message;
+                saveNoteBtn.disabled = false;
+            }
+        };
+
+        const q = query(collection(db, "notes"), orderBy("createdAt", "desc"));
+        onSnapshot(q, (snapshot) => {
+            notesGrid.innerHTML = '';
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const noteHtml = `
+                    <div class="card">
+                        <div style="font-size: 2rem;">📄</div>
+                        <h3>${escapeHTML(data.title)}</h3>
+                        <p>${escapeHTML(data.category)}</p>
+                        <small>By ${escapeHTML(data.userName)}</small>
+                        <button onclick="window.open('${escapeHTML(data.fileUrl)}')" style="margin-top:10px;">Download / View</button>
+                    </div>
+                `;
+                notesGrid.insertAdjacentHTML('beforeend', noteHtml);
+            });
+        });
+    </script>
+</body>
+</html>
