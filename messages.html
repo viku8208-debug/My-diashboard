@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Messages - StudentSathi</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chat-container {
+            display: flex;
+            height: calc(100vh - 120px);
+            background: var(--white);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .users-list {
+            width: 300px;
+            border-right: 1px solid #eee;
+            overflow-y: auto;
+        }
+        .chat-window {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-user-item {
+            padding: 15px;
+            border-bottom: 1px solid #f9f9f9;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .chat-user-item:hover, .chat-user-item.active {
+            background: #f0eeff;
+        }
+        .messages-display {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message-bubble {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+        }
+        .msg-received {
+            align-self: flex-start;
+            background: #eee;
+        }
+        .msg-sent {
+            align-self: flex-end;
+            background: var(--primary-color);
+            color: white;
+        }
+        .chat-input-area {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        @media (max-width: 768px) {
+            .users-list { width: 80px; }
+            .users-list span { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-content">
+        <header>
+            <h1>Messages</h1>
+        </header>
+
+        <div class="chat-container">
+            <div class="users-list" id="chat-users">
+                <div style="padding: 20px; color: #666;">Loading conversations...</div>
+            </div>
+            <div class="chat-window">
+                <div id="active-chat-user" style="padding: 15px; border-bottom: 1px solid #eee; font-weight: bold;">
+                    Select a conversation
+                </div>
+                <div class="messages-display" id="messages-display">
+                    <!-- Messages here -->
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="message-input" placeholder="Type a message..." style="margin:0;">
+                    <button id="send-btn" style="width: auto; margin:0; padding: 0 20px;">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { injectNavigation, escapeHTML } from './components.js';
+        import { auth, db } from './app.js';
+        import {
+            collection, addDoc, serverTimestamp, query, orderBy, onSnapshot,
+            where, getDocs, doc, getDoc, limit
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        injectNavigation();
+
+        let activeChatWith = new URLSearchParams(window.location.search).get('chatWith');
+        let currentMessagesUnsubscribe1 = null;
+        let currentMessagesUnsubscribe2 = null;
+
+        async function startChat(otherUid) {
+            activeChatWith = otherUid;
+            const otherUserDoc = await getDoc(doc(db, "users", otherUid));
+            const otherUserData = otherUserDoc.data();
+            document.getElementById('active-chat-user').innerText = otherUserData ? otherUserData.name : "Chat";
+
+            if (currentMessagesUnsubscribe1) currentMessagesUnsubscribe1();
+            if (currentMessagesUnsubscribe2) currentMessagesUnsubscribe2();
+
+            const display = document.getElementById('messages-display');
+            display.innerHTML = '';
+
+            let messages = [];
+
+            function renderMessages() {
+                display.innerHTML = '';
+                messages.sort((a, b) => {
+                    const timeA = a.createdAt?.toMillis() || 0;
+                    const timeB = b.createdAt?.toMillis() || 0;
+                    return timeA - timeB;
+                });
+                messages.forEach(data => {
+                    const div = document.createElement('div');
+                    div.className = `message-bubble ${data.from === auth.currentUser.uid ? 'msg-sent' : 'msg-received'}`;
+                    div.textContent = data.text;
+                    display.appendChild(div);
+                });
+                display.scrollTop = display.scrollHeight;
+            }
+
+            const q1 = query(
+                collection(db, "messages"),
+                where("from", "==", auth.currentUser.uid),
+                where("to", "==", otherUid),
+                orderBy("createdAt", "asc")
+            );
+
+            const q2 = query(
+                collection(db, "messages"),
+                where("from", "==", otherUid),
+                where("to", "==", auth.currentUser.uid),
+                orderBy("createdAt", "asc")
+            );
+
+            currentMessagesUnsubscribe1 = onSnapshot(q1, (snapshot) => {
+                messages = messages.filter(m => !(m.from === auth.currentUser.uid && m.to === otherUid));
+                snapshot.forEach(doc => messages.push({id: doc.id, ...doc.data()}));
+                renderMessages();
+            });
+
+            currentMessagesUnsubscribe2 = onSnapshot(q2, (snapshot) => {
+                messages = messages.filter(m => !(m.from === otherUid && m.to === auth.currentUser.uid));
+                snapshot.forEach(doc => messages.push({id: doc.id, ...doc.data()}));
+                renderMessages();
+            });
+        }
+
+        async function loadChatList() {
+            const list = document.getElementById('chat-users');
+
+            // To be scalable, we search for messages where the current user is involved
+            // and build a list of unique 'other' users.
+            const qSent = query(collection(db, "messages"), where("from", "==", auth.currentUser.uid), limit(20));
+            const qReceived = query(collection(db, "messages"), where("to", "==", auth.currentUser.uid), limit(20));
+
+            const [sentSnap, receivedSnap] = await Promise.all([getDocs(qSent), getDocs(qReceived)]);
+
+            const uids = new Set();
+            sentSnap.forEach(d => uids.add(d.data().to));
+            receivedSnap.forEach(d => uids.add(d.data().from));
+            if (activeChatWith) uids.add(activeChatWith);
+
+            list.innerHTML = '';
+            if (uids.size === 0) {
+                list.innerHTML = '<div style="padding: 20px; color: #666;">No conversations yet. Browse the marketplace to start chatting!</div>';
+                return;
+            }
+
+            for (const uid of uids) {
+                const userDoc = await getDoc(doc(db, "users", uid));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    const div = document.createElement('div');
+                    div.className = `chat-user-item ${activeChatWith === uid ? 'active' : ''}`;
+                    div.innerHTML = `<span class="icon">👤</span> <span>${escapeHTML(data.name)}</span>`;
+                    div.onclick = () => {
+                        document.querySelectorAll('.chat-user-item').forEach(i => i.classList.remove('active'));
+                        div.classList.add('active');
+                        startChat(uid);
+                    };
+                    list.appendChild(div);
+                }
+            }
+        }
+
+        document.getElementById('send-btn').onclick = async () => {
+            const text = document.getElementById('message-input').value;
+            if (!text || !activeChatWith) return;
+
+            await addDoc(collection(db, "messages"), {
+                text: text,
+                from: auth.currentUser.uid,
+                to: activeChatWith,
+                createdAt: serverTimestamp()
+            });
+
+            document.getElementById('message-input').value = '';
+            // Refresh list if it was empty
+            loadChatList();
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loadChatList();
+                if (activeChatWith) startChat(activeChatWith);
+            }
+        });
+    </script>
+</body>
+</html>

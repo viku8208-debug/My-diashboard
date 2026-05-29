@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Profile - StudentSathi</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="main-content">
+        <header>
+            <h1>Student Profile</h1>
+        </header>
+
+        <div class="login-card" style="max-width: 600px; margin: 0 auto; text-align: left;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div id="profile-pic" style="width: 100px; height: 100px; background: #ddd; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 3rem;">👤</div>
+                <h2 id="display-name">Loading...</h2>
+                <p id="display-email" style="color: #666;"></p>
+            </div>
+
+            <div class="profile-info">
+                <label><b>Field of Study:</b></label>
+                <p id="display-class" style="margin-bottom: 15px;"></p>
+
+                <label><b>Institution:</b></label>
+                <p id="display-institution" style="margin-bottom: 15px;"></p>
+            </div>
+
+            <button onclick="window.location.href='messages.html'" id="message-btn" style="display: none;">Message Student</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { injectNavigation } from './components.js';
+        import { auth, db } from './app.js';
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        injectNavigation();
+
+        async function loadProfile(uid) {
+            const docRef = doc(db, "users", uid);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('display-name').innerText = data.name;
+                document.getElementById('display-email').innerText = data.email;
+                document.getElementById('display-class').innerText = data.fieldOfStudy || 'N/A';
+                document.getElementById('display-institution').innerText = data.institution || 'N/A';
+
+                onAuthStateChanged(auth, (currentUser) => {
+                    if (currentUser && currentUser.uid !== uid) {
+                        const msgBtn = document.getElementById('message-btn');
+                        msgBtn.style.display = 'block';
+                        msgBtn.onclick = () => {
+                            location.href = `messages.html?chatWith=${uid}`;
+                        };
+                    }
+                });
+            }
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewUid = urlParams.get('uid');
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loadProfile(viewUid || user.uid);
+            }
+        });
+    </script>
+</body>
+</html>

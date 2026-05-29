@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Study Reels - StudentSathi</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .reels-container {
+            max-width: 450px;
+            margin: 0 auto;
+            height: calc(100vh - 100px);
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+        }
+        .reels-container::-webkit-scrollbar { display: none; }
+
+        .reel-card {
+            height: 100%;
+            width: 100%;
+            scroll-snap-align: start;
+            position: relative;
+            background: #000;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .reel-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            color: white;
+        }
+
+        .fab-upload {
+            position: fixed;
+            right: 30px;
+            bottom: 80px;
+            width: 60px;
+            height: 60px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        #upload-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-content">
+        <header>
+            <h1>Study Reels</h1>
+        </header>
+
+        <div class="reels-container" id="reels-feed">
+            <!-- Reels will be loaded here -->
+        </div>
+    </div>
+
+    <div class="fab-upload" onclick="document.getElementById('upload-modal').style.display='flex'">+</div>
+
+    <div id="upload-modal">
+        <div class="login-card" style="text-align: left;">
+            <h2 style="margin-bottom: 1rem;">Upload Study Reel</h2>
+            <input type="file" id="video-file" accept="video/*">
+            <input type="text" id="video-title" placeholder="Video Title">
+            <input type="text" id="video-description" placeholder="Description">
+            <button id="upload-btn">Upload Reel</button>
+            <button onclick="document.getElementById('upload-modal').style.display='none'" style="background: #ccc; color: #333;">Cancel</button>
+            <div id="upload-status" style="margin-top: 10px;"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { injectNavigation, escapeHTML } from './components.js';
+        import { auth, db, storage } from './app.js';
+        import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+        injectNavigation();
+
+        const uploadBtn = document.getElementById('upload-btn');
+        const reelsFeed = document.getElementById('reels-feed');
+
+        uploadBtn.onclick = async () => {
+            const file = document.getElementById('video-file').files[0];
+            const title = document.getElementById('video-title').value;
+            const desc = document.getElementById('video-description').value;
+            const status = document.getElementById('upload-status');
+
+            if(!file || !title) return alert("File and Title required");
+
+            status.innerText = "Uploading...";
+            uploadBtn.disabled = true;
+
+            try {
+                const storageRef = ref(storage, `reels/${Date.now()}_${file.name}`);
+                const snapshot = await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(snapshot.ref);
+
+                await addDoc(collection(db, "reels"), {
+                    videoUrl: url,
+                    title: title,
+                    description: desc,
+                    userId: auth.currentUser.uid,
+                    userName: auth.currentUser.displayName,
+                    createdAt: serverTimestamp()
+                });
+
+                status.innerText = "Success!";
+                setTimeout(() => {
+                    document.getElementById('upload-modal').style.display = 'none';
+                    status.innerText = "";
+                    uploadBtn.disabled = false;
+                }, 1000);
+            } catch (e) {
+                status.innerText = "Error: " + e.message;
+                uploadBtn.disabled = false;
+            }
+        };
+
+        // Load Reels
+        const q = query(collection(db, "reels"), orderBy("createdAt", "desc"));
+        onSnapshot(q, (snapshot) => {
+            reelsFeed.innerHTML = '';
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const reelHtml = `
+                    <div class="reel-card">
+                        <video src="${escapeHTML(data.videoUrl)}" loop onclick="this.paused ? this.play() : this.pause()"></video>
+                        <div class="reel-overlay">
+                            <h3>${escapeHTML(data.title)}</h3>
+                            <p>${escapeHTML(data.description)}</p>
+                            <small>@${escapeHTML(data.userName || 'Anonymous')}</small>
+                        </div>
+                    </div>
+                `;
+                reelsFeed.insertAdjacentHTML('beforeend', reelHtml);
+            });
+        });
+    </script>
+</body>
+</html>

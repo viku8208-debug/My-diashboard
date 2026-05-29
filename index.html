@@ -1,30 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>StudentSathi Login</title>
-<link rel="stylesheet" href="style.css">
-
-<script type="module" src="app.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>StudentSathi - Login</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body class="gradient">
 
 <div class="login-card">
+    <h1>StudentSathi</h1>
 
-<h1>StudentSathi</h1>
+    <div id="auth-forms">
+        <div id="login-form">
+            <input id="login-email" placeholder="Email" type="email">
+            <input id="login-password" type="password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <p style="margin-top: 15px;">Don't have an account? <a href="#" onclick="toggleAuth(false)">Signup</a></p>
+        </div>
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+        <div id="signup-form" style="display: none;">
+            <input id="signup-name" placeholder="Full Name">
+            <input id="signup-email" placeholder="Email" type="email">
+            <input id="signup-password" type="password" placeholder="Password">
+            <select id="signup-class">
+                <option value="">Select Field of Study / Class</option>
+                <option value="Class 5">Class 5</option>
+                <option value="Class 6">Class 6</option>
+                <option value="Class 7">Class 7</option>
+                <option value="Class 8">Class 8</option>
+                <option value="Class 9">Class 9</option>
+                <option value="Class 10">Class 10</option>
+                <option value="Class 11">Class 11</option>
+                <option value="Class 12">Class 12</option>
+                <option value="Undergraduate">Undergraduate</option>
+                <option value="Postgraduate">Postgraduate</option>
+                <option value="PhD">PhD</option>
+            </select>
+            <input id="signup-institution" placeholder="University / School Name">
+            <button onclick="signup()">Create Account</button>
+            <p style="margin-top: 15px;">Already have an account? <a href="#" onclick="toggleAuth(true)">Login</a></p>
+        </div>
 
-<button onclick="login()">Login</button>
-<button onclick="signup()">Signup</button>
+        <div style="margin: 20px 0; position: relative;">
+            <hr>
+            <span style="position: absolute; top: -10px; background: white; padding: 0 10px; left: 50%; transform: translateX(-50%); color: #888;">OR</span>
+        </div>
 
-<button class="google" onclick="googleLogin()">Login with Google</button>
-
-<p id="error"></p>
-
+        <button class="google" onclick="googleLogin()">Login with Google</button>
+        <p id="error" class="error"></p>
+    </div>
 </div>
 
+<script type="module" src="app.js"></script>
+<script>
+    function toggleAuth(isLogin) {
+        document.getElementById('login-form').style.display = isLogin ? 'block' : 'none';
+        document.getElementById('signup-form').style.display = isLogin ? 'none' : 'block';
+        document.getElementById('error').innerText = '';
+    }
+</script>
 </body>
 </html>
